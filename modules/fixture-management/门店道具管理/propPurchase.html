@@ -1,0 +1,3079 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>道具采购 - 复原页</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #1f2937;
+      background: #f2f4f7;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .prop-purchase-page {
+      height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .selected-stores-bar,
+    .left-section,
+    .right-section {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .selected-stores-bar {
+      flex: none;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+
+    .mode-tabs-bar {
+      flex: none;
+      margin: -4px 0 12px;
+      padding: 0 4px;
+      border-bottom: 2px solid #e4e7ed;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 32px;
+    }
+
+    .mode-tab {
+      position: relative;
+      height: 40px;
+      padding: 0 4px;
+      border: 0;
+      background: transparent;
+      color: #909399;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: 0.16s ease;
+    }
+
+    .mode-tab:hover {
+      color: #527DF7;
+    }
+
+    .mode-tab.active {
+      color: #527DF7;
+      font-weight: 600;
+    }
+
+    .mode-tab.active::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: #527DF7;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .selected-count-top {
+      color: #99999a;
+      font-size: 14px;
+    }
+
+    .btn {
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      min-height: 32px;
+      padding: 6px 14px;
+      cursor: pointer;
+      background: #fff;
+      color: #606266;
+      transition: 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: #527DF7;
+      color: #527DF7;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: #527DF7;
+      border-color: #527DF7;
+    }
+
+    .btn-primary:hover {
+      background: #527DF7;
+      border-color: #527DF7;
+      color: #fff;
+    }
+
+    .btn-primary:disabled {
+      cursor: not-allowed;
+      background: #527DF7;
+      border-color: #527DF7;
+      color: #fff;
+      opacity: 0.45;
+    }
+
+    .btn-small {
+      min-height: 28px;
+      padding: 4px 10px;
+      font-size: 13px;
+    }
+
+    .btn-link {
+      min-height: auto;
+      padding: 0;
+      border: 0;
+      color: #527DF7;
+      background: transparent;
+    }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 66px;
+      overflow: auto;
+    }
+
+    .tag-item {
+      display: flex;
+      align-items: center;
+      background: #f5f6f7;
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid;
+    }
+
+    .tag-danger {
+      color: #f56c6c;
+      background: #fef0f0;
+      border-color: #fde2e2;
+    }
+
+    .tag-success {
+      color: #67c23a;
+      background: #f0f9eb;
+      border-color: #e1f3d8;
+    }
+
+    .tag-info {
+      color: #909399;
+      background: #f4f4f5;
+      border-color: #e9e9eb;
+    }
+
+    .required-star {
+      color: #f56c6c;
+      margin-right: 2px;
+      font-weight: 700;
+    }
+
+    .tag-store-name {
+      margin: 0 10px;
+      font-size: 14px;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .left-section {
+      width: 240px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .filter-section {
+      flex: none;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .select,
+    .input {
+      width: 100%;
+      height: 34px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      padding: 0 10px;
+      outline: none;
+      background: #fff;
+      color: #606266;
+    }
+
+    .select:focus,
+    .input:focus {
+      border-color: #527DF7;
+    }
+
+    .category-list-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .image-group {
+      border-bottom: 1px solid #eee;
+    }
+
+    .group-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .group-title:hover {
+      background: #fafafa;
+    }
+
+    .group-icon {
+      color: #999;
+      font-size: 12px;
+      transition: transform 0.18s ease;
+    }
+
+    .group-icon.expanded {
+      transform: rotate(90deg);
+    }
+
+    .category-list {
+      padding: 4px 0;
+    }
+
+    .category-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 36px;
+      padding: 8px 24px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #606266;
+    }
+
+    .category-item:hover {
+      background: #fafafa;
+    }
+
+    .category-item.active {
+      background: #eef3ff;
+      color: #527DF7;
+    }
+
+    .cat-name {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .cat-count {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .right-section {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .custom-section {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .custom-header {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .custom-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      min-width: 0;
+      margin-left: auto;
+    }
+
+    .global-custom-props {
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 72px;
+      border: 1px solid #e4e7ed;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .custom-list-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 1 360px;
+      min-width: 260px;
+    }
+
+    .custom-list-filter label {
+      flex: none;
+      color: #606266;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .custom-list-filter .input {
+      max-width: 260px;
+    }
+
+    .prop-table-wrap {
+      padding: 12px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #ebeef5;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: #909399;
+      font-weight: 600;
+      background: #f5f7fa;
+    }
+
+    tr:hover td {
+      background: #f5f7fa;
+    }
+
+    .text-ellipsis {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .prop-name-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .prop-name-cell .text-ellipsis {
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .custom-image-cell {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #edf0f5;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #eef6ff, #f8fbff);
+      display: grid;
+      place-items: center;
+    }
+
+    .custom-image-cell svg {
+      width: 60%;
+      height: 60%;
+    }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .danger-link {
+      color: #f56c6c;
+    }
+
+    .danger-link:hover {
+      color: #dc2626;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-mask.open {
+      display: flex;
+    }
+
+    .purchase-modal {
+      width: min(860px, calc(100vw - 48px));
+      max-height: calc(100vh - 80px);
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #e4e7ed;
+      animation: modalScaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-header {
+      flex: none;
+      height: 56px;
+      padding: 0 24px;
+      border-bottom: 1px solid #ebeef5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 16px;
+      color: #1f2937;
+      background: #f8fafc;
+    }
+
+    .modal-close {
+      border: 0;
+      background: transparent;
+      color: #909399;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      transition: 0.16s ease;
+    }
+
+    .modal-close:hover {
+      color: #f56c6c;
+    }
+
+    .modal-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .non-standard-form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-item label {
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .form-item input,
+    .form-item select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      padding: 0 12px;
+      outline: none;
+      color: #606266;
+      background: #fff;
+      transition: 0.16s ease;
+    }
+
+    .form-item input:focus,
+    .form-item select:focus {
+      border-color: #527DF7;
+      box-shadow: 0 0 0 3px rgba(82, 125, 247, 0.15);
+    }
+
+    .unit-price-field,
+    .quantity-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .unit-price-field input,
+    .quantity-field input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .unit-prefix,
+    .quantity-suffix {
+      color: #606266;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .unit-price-field select {
+      width: 116px;
+      flex: 0 0 116px;
+    }
+
+    .store-multi-select {
+      position: relative;
+      width: 100%;
+    }
+
+    .multi-select-trigger {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      color: #606266;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .multi-select-trigger.open {
+      border-color: #527DF7;
+    }
+
+    .multi-select-label {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .multi-select-arrow {
+      color: #909399;
+      margin-left: 8px;
+    }
+
+    .multi-select-panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      left: 0;
+      z-index: 60;
+      display: none;
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+    }
+
+    .multi-select-panel.open {
+      display: block;
+    }
+
+    .multi-select-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #606266;
+      font-size: 13px;
+    }
+
+    .multi-select-option:hover {
+      background: #f5f7fa;
+      color: #1f2937;
+    }
+
+    .multi-select-option input[type="checkbox"] {
+      flex: none;
+      width: 15px;
+      height: 15px;
+      margin: 0;
+    }
+
+    .upload-box {
+      min-height: 80px;
+      border: 2px dashed #dcdfe6;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px;
+      cursor: pointer;
+      background: #f8fafc;
+      transition: 0.16s ease;
+    }
+
+    .upload-box:hover {
+      border-color: #527DF7;
+      background: #eef3ff;
+    }
+
+    .upload-preview {
+      width: 56px;
+      height: 56px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid #dcdfe6;
+      display: grid;
+      place-items: center;
+      color: #999;
+      font-size: 20px;
+      overflow: hidden;
+    }
+
+    .upload-preview svg {
+      width: 54%;
+      height: 54%;
+    }
+
+    .upload-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .upload-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+
+    .upload-text span:first-child {
+      color: #606266;
+      font-weight: 600;
+    }
+
+    .upload-tip {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .hidden-file-input {
+      display: none;
+    }
+
+    .modal-footer {
+      flex: none;
+      padding: 14px 24px;
+      border-top: 1px solid #ebeef5;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #f8fafc;
+    }
+
+    @keyframes modalScaleUp {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .header-bar {
+      flex: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .props-header {
+      min-width: 0;
+      font-size: 14px;
+      color: #606266;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .search-box {
+      width: 320px;
+      display: flex;
+      flex: 0 0 auto;
+    }
+
+    .search-box .input {
+      border-radius: 4px 0 0 4px;
+    }
+
+    .search-box .btn {
+      width: 42px;
+      padding: 0;
+      border-radius: 0 4px 4px 0;
+      margin-left: -1px;
+    }
+
+    .props-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .props-scroll-inner {
+      padding: 12px;
+    }
+
+    .props-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .prop-card {
+      border: 1px solid #e4e7ed;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    .prop-main {
+      display: flex;
+      min-height: 160px;
+    }
+
+    .prop-image {
+      width: 140px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      background: #f5f7fa;
+    }
+
+    .prop-image-wrap {
+      width: 100%;
+      position: relative;
+    }
+
+    .prop-image-box,
+    .position-image {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px solid #edf0f5;
+      background: linear-gradient(135deg, #eef6ff, #f8fbff);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .prop-image-box svg,
+    .position-image svg {
+      width: 52%;
+      height: 52%;
+    }
+
+    .non-standard-badge {
+      position: absolute;
+      left: 1px;
+      right: 1px;
+      bottom: 1px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 0 6px 6px;
+      background: rgba(245, 108, 108, 0.92);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .prop-info {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .prop-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .prop-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 600;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .purchase-btn-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .purchase-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      background: #f56c6c;
+      color: #fff;
+      border: 1px solid #fff;
+      font-size: 12px;
+      line-height: 18px;
+      text-align: center;
+      display: none;
+    }
+
+    .purchase-count.show {
+      display: block;
+    }
+
+    .prop-image-version,
+    .prop-positions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 24px;
+      overflow: hidden;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid #d9e2ff;
+      color: #527DF7;
+      background: #eef3ff;
+    }
+
+    .pill-info {
+      border-color: #e9e9eb;
+      color: #909399;
+      background: #f4f4f5;
+    }
+
+    .image-tag {
+      color: #909399;
+      font-size: 12px;
+    }
+
+    .prop-spec {
+      color: #909399;
+      font-size: 12px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .prop-price {
+      margin-top: auto;
+      color: #f56c6c;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 22px;
+      word-break: keep-all;
+    }
+
+    .detail-footer {
+      flex: none;
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+    }
+
+    .footer-actions {
+      margin-left: auto;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .custom-section .detail-footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      justify-content: flex-end;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .purchased-prop-count {
+      color: #0b7ff5;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .empty-data-tip {
+      min-height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .drawer-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      justify-content: flex-end;
+      background: rgba(15, 23, 42, 0.38);
+    }
+
+    .drawer-mask.open {
+      display: flex;
+    }
+
+    .purchase-drawer {
+      width: min(560px, 92vw);
+      height: 100vh;
+      background: #fff;
+      box-shadow: -16px 0 36px rgba(15, 23, 42, 0.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer-header {
+      flex: none;
+      height: 56px;
+      padding: 0 18px;
+      border-bottom: 1px solid #ebeef5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 600;
+    }
+
+    .drawer-close {
+      border: 0;
+      background: transparent;
+      color: #909399;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .drawer-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .section-title {
+      display: block;
+      margin-bottom: 12px;
+      color: #527DF7;
+      font-weight: 500;
+    }
+
+    .positions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .position-card {
+      min-height: 72px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      background: #fff;
+    }
+
+    .position-image {
+      width: 60px;
+      height: 60px;
+      margin-left: 6px;
+      flex: 0 0 auto;
+    }
+
+    .position-name {
+      flex: 1;
+      min-width: 0;
+      padding: 8px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .store-list-section {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .batch-set-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .number-input {
+      width: 96px;
+      height: 32px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      padding: 0 8px;
+      outline: none;
+    }
+
+    .number-input:focus {
+      border-color: #527DF7;
+    }
+
+    .quantity-input-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .quantity-unit {
+      color: #606266;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .store-config-fields {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .store-list-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      color: #909399;
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid #ebeef5;
+      margin-bottom: 4px;
+    }
+
+    .store-list-header .store-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .store-list-header .store-config-fields {
+      align-items: center;
+    }
+
+    .store-spec-column {
+      width: 220px;
+      flex: 0 0 220px;
+    }
+
+    .store-qty-column {
+      width: 130px;
+      flex: 0 0 130px;
+    }
+
+    .spec-textarea {
+      width: 220px;
+      min-height: 32px;
+      max-height: 120px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      padding: 6px 8px;
+      color: #303133;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 18px;
+      outline: none;
+      resize: none;
+      overflow: hidden;
+    }
+
+    .spec-textarea:focus {
+      border-color: #527DF7;
+    }
+
+    .store-tip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #fffbe6;
+      border-left: 4px solid #faad14;
+      font-size: 12px;
+      color: #d48806;
+      margin-bottom: 12px;
+    }
+
+    .store-list {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .store-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .store-item:last-child {
+      border-bottom: 0;
+    }
+
+    .store-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .store-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .store-name {
+      font-weight: 500;
+      font-size: 14px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .image-tag-small {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 6px;
+      background: #eef3ff;
+      color: #527DF7;
+      font-size: 11px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .store-meta {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .drawer-footer {
+      flex: none;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      background: #fff;
+    }
+
+    .purchase-summary {
+      color: #666;
+      font-size: 13px;
+    }
+
+    .purchase-summary .count {
+      color: #ff4d4f;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      z-index: 60;
+      transform: translateX(-50%);
+      min-width: 260px;
+      max-width: min(720px, calc(100vw - 32px));
+      padding: 10px 14px;
+      background: #fdf6ec;
+      color: #e6a23c;
+      border: 1px solid #faecd8;
+      border-radius: 4px;
+      box-shadow: 0 6px 18px rgba(16, 24, 40, 0.12);
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    :root {
+      --surface: rgba(255, 255, 255, 0.94);
+      --surface-strong: #fff;
+      --line-soft: #e7edf5;
+      --line-strong: #d8e2ee;
+      --text-strong: #172033;
+      --text-main: #334155;
+      --text-muted: #7b8798;
+      --primary: #527DF7;
+      --primary-soft: #eef3ff;
+      --success-soft: #eefaf4;
+      --danger-soft: #fff1f2;
+      --warning-soft: #fff7e6;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.18);
+    }
+
+    body {
+      color: var(--text-main);
+      background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+    }
+
+    .prop-purchase-page {
+      padding: 18px;
+      gap: 0;
+    }
+
+    .selected-stores-bar,
+    .left-section,
+    .right-section,
+    .custom-section {
+      background: var(--surface);
+      border: 1px solid rgba(216, 226, 238, 0.9);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px);
+    }
+
+    .selected-stores-bar {
+      padding: 14px 18px;
+      border-radius: 8px;
+    }
+
+    .page-header {
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      color: var(--text-strong);
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .selected-count-top {
+      color: var(--text-muted);
+    }
+
+    .selected-count-top span {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .mode-tabs-bar {
+      margin: -2px 0 12px;
+      padding: 0 2px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .mode-tabs {
+      gap: 28px;
+    }
+
+    .mode-tab {
+      height: 38px;
+      color: var(--text-muted);
+    }
+
+    .mode-tab.active,
+    .mode-tab:hover {
+      color: var(--primary);
+    }
+
+    .mode-tab.active::after {
+      background: var(--primary);
+    }
+
+    .btn {
+      border-color: var(--line-strong);
+      border-radius: 6px;
+      color: #465466;
+      background: linear-gradient(180deg, #fff, #f8fafc);
+      box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+    }
+
+    .btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 6px 16px rgba(82, 125, 247, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(82, 125, 247, 0.22);
+    }
+
+    .btn-primary:hover {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:disabled {
+      border-color: var(--primary);
+      background: var(--primary);
+      box-shadow: none;
+      color: #fff;
+      opacity: 0.45;
+    }
+
+    .tag-item {
+      min-height: 30px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+
+    .tag {
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .main-content {
+      gap: 14px;
+    }
+
+    .left-section,
+    .right-section,
+    .custom-section {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .left-section {
+      width: 252px;
+    }
+
+    .filter-section,
+    .header-bar,
+    .custom-header {
+      border-bottom-color: var(--line-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+    }
+
+    .custom-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-section {
+      padding: 12px;
+    }
+
+    .select,
+    .input,
+    .number-input,
+    .spec-textarea,
+    .form-item input,
+    .form-item select,
+    .multi-select-trigger {
+      border-color: var(--line-strong);
+      border-radius: 6px;
+      color: var(--text-main);
+      background: #fff;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .select:focus,
+    .input:focus,
+    .number-input:focus,
+    .spec-textarea:focus,
+    .form-item input:focus,
+    .form-item select:focus,
+    .multi-select-trigger.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(82, 125, 247, 0.12);
+    }
+
+    .group-title {
+      min-height: 44px;
+      color: var(--text-strong);
+      border-left: 3px solid transparent;
+    }
+
+    .group-title:hover {
+      background: #f8fbff;
+      border-left-color: #bfdbfe;
+    }
+
+    .category-item {
+      margin: 2px 8px;
+      border-radius: 6px;
+      padding: 8px 12px 8px 22px;
+    }
+
+    .category-item:hover {
+      background: #f8fbff;
+    }
+
+    .category-item.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: inset 0 0 0 1px rgba(82, 125, 247, 0.12);
+    }
+
+    .cat-count {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .header-bar {
+      padding: 13px 14px;
+    }
+
+    .props-header {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .search-box {
+      width: 340px;
+    }
+
+    .props-scroll {
+      background: linear-gradient(180deg, #fff, #fbfdff);
+    }
+
+    .props-scroll-inner {
+      padding: 14px;
+    }
+
+    .props-grid {
+      gap: 14px;
+    }
+
+    .prop-card {
+      border-color: var(--line-soft);
+      border-radius: 8px;
+      background: var(--surface-strong);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .prop-card:hover {
+      border-color: #bfd4ee;
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .prop-main {
+      min-height: 168px;
+    }
+
+    .prop-image {
+      width: 148px;
+      background: linear-gradient(180deg, #f8fafc, #eef3ff);
+    }
+
+    .prop-image-box,
+    .position-image,
+    .custom-image-cell,
+    .upload-preview {
+      border-color: var(--line-soft);
+      background: linear-gradient(135deg, #f5faff, #eef6ff);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .prop-info {
+      padding: 14px;
+      gap: 9px;
+    }
+
+    .prop-name {
+      color: var(--text-strong);
+      font-size: 15px;
+    }
+
+    .pill {
+      height: 23px;
+      border-radius: 999px;
+      border-color: #cfe2ff;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 500;
+    }
+
+    .pill-info {
+      border-color: #dde5ef;
+      color: #64748b;
+      background: #f8fafc;
+    }
+
+    .prop-spec,
+    .image-tag,
+    .store-meta {
+      color: var(--text-muted);
+    }
+
+    .prop-price {
+      color: #e5484d;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .purchase-count {
+      background: #e5484d;
+      box-shadow: 0 4px 10px rgba(229, 72, 77, 0.24);
+    }
+
+    .detail-footer,
+    .drawer-footer,
+    .modal-footer {
+      border-top-color: var(--line-soft);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .purchased-prop-count,
+    .section-title {
+      color: var(--primary);
+    }
+
+    .custom-section {
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .custom-header {
+      color: var(--text-strong);
+      margin: -18px -18px 16px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .global-custom-props {
+      border-color: var(--line-soft);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .custom-list-filter {
+      background: transparent;
+    }
+
+    th {
+      color: #7b8798;
+      background: #f8fafc;
+    }
+
+    td {
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: #f8fbff;
+    }
+
+    .table-actions .btn-link {
+      color: var(--primary);
+    }
+
+    .modal-mask,
+    .drawer-mask {
+      background: rgba(15, 23, 42, 0.46);
+      backdrop-filter: blur(6px);
+    }
+
+    .purchase-modal,
+    .purchase-drawer {
+      border: 1px solid rgba(216, 226, 238, 0.9);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .purchase-modal {
+      border-radius: 8px;
+    }
+
+    .purchase-drawer {
+      width: min(600px, 94vw);
+    }
+
+    .modal-header,
+    .drawer-header {
+      color: var(--text-strong);
+      background: linear-gradient(180deg, #fff, #f8fafc);
+      border-bottom-color: var(--line-soft);
+    }
+
+    .drawer-body {
+      background: #fbfdff;
+    }
+
+    .section {
+      border-bottom-color: var(--line-soft);
+    }
+
+    .positions-grid {
+      gap: 10px;
+    }
+
+    .position-card {
+      border-color: var(--line-soft);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+    }
+
+    .store-tip {
+      border-left-color: #f59e0b;
+      border-radius: 6px;
+      background: var(--warning-soft);
+    }
+
+    .store-list-header {
+      border-bottom-color: var(--line-soft);
+      color: var(--text-muted);
+    }
+
+    .store-item {
+      padding: 12px;
+      border: 1px solid transparent;
+      border-bottom-color: #eef2f7;
+      border-radius: 8px;
+      transition: background 0.16s ease, border-color 0.16s ease;
+    }
+
+    .store-item:hover {
+      border-color: var(--line-soft);
+      background: #fff;
+    }
+
+    .image-tag-small {
+      border-radius: 999px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 600;
+    }
+
+    .toast {
+      border-radius: 8px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border: 2px solid transparent;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.48);
+      background-clip: padding-box;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    @media (max-width: 980px) {
+      .prop-purchase-page {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .main-content {
+        flex-direction: column;
+        overflow: visible;
+      }
+
+      .left-section {
+        width: 100%;
+        max-height: 320px;
+      }
+
+      .right-section {
+        min-height: 680px;
+      }
+
+      .custom-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .custom-header-left {
+        width: 100%;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .custom-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        margin-left: 0;
+      }
+
+      .custom-list-filter {
+        flex: 1 1 260px;
+      }
+
+      .props-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="prop-purchase-page">
+    <div class="selected-stores-bar">
+      <div class="page-header">
+        <h1 class="title">选择采购门店</h1>
+        <div class="selected-count-top">已选择 <span id="selectedStoreCount">0</span> 个门店</div>
+        <button class="btn btn-primary" id="reselectBtn" type="button">重新选店</button>
+      </div>
+      <div class="tags-wrap" id="storeTags"></div>
+    </div>
+
+    <div class="mode-tabs-bar">
+      <div class="mode-tabs" id="modeTabs"></div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <aside class="left-section">
+        <div class="filter-section">
+          <select class="select" id="purchaseFilter">
+            <option value="">是否已采购</option>
+            <option value="purchased">已采购</option>
+            <option value="unpurchased">未采购</option>
+          </select>
+        </div>
+        <div class="category-list-scroll" id="categoryTree"></div>
+      </aside>
+
+      <main class="right-section">
+        <div class="header-bar">
+          <div class="props-header" id="currentPath">当前目录：- / 全部</div>
+          <div class="search-box">
+            <input class="input" id="keywordInput" placeholder="输入道具/仓位名称" />
+            <button class="btn" id="searchBtn" title="搜索" type="button">🔍</button>
+          </div>
+        </div>
+        <div class="props-scroll">
+          <div class="props-scroll-inner" id="propsContent"></div>
+        </div>
+        <div class="detail-footer">
+          <span>已采购 <span class="purchased-prop-count" id="purchasedPropCount">0</span> 个道具</span>
+          <div class="footer-actions">
+            <button class="btn" id="draftSaveBtn" type="button">暂存</button>
+            <button class="btn btn-primary" id="nextBtn" type="button" disabled>去下单</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+  <div class="modal-mask" id="customModal"></div>
+  <div class="toast" id="toast"></div>
+  <script>
+    const storeTypes = {
+      ZY: { label: "直营", className: "tag-danger" },
+      LY: { label: "联营", className: "tag-success" },
+      JM: { label: "加盟", className: "tag-info" }
+    };
+
+    const stores = [
+      { id: "S001", storeCode: "CQ001", storeName: "重庆观音桥旗舰店", storeType: "ZY", storeForm: "旗舰形象", deptName: "西南一区" },
+      { id: "S002", storeCode: "CD002", storeName: "成都春熙路标准店", storeType: "LY", storeForm: "标准形象", deptName: "西南一区" },
+      { id: "S003", storeCode: "WH003", storeName: "武汉光谷社区店", storeType: "JM", storeForm: "社区形象", deptName: "华中一区" },
+      { id: "S004", storeCode: "CS004", storeName: "长沙五一广场标准店", storeType: "ZY", storeForm: "标准形象", deptName: "华中二区" }
+    ];
+
+    const modeTabs = [
+      { label: "标准道具", value: "standard" },
+      { label: "定制道具", value: "custom" }
+    ];
+
+    const propTypeOptions = ["美陈道具", "平面道具", "陈列道具", "工程道具"];
+    const supplierOptions = ["山城广告制作", "华南印务", "简造陈列供应商", "简造五金", "简造工程配套"];
+
+    const propGroups = [
+      {
+        formName: "旗舰形象",
+        groups: [
+          {
+            propType: "visual",
+            propTypeDesc: "美陈道具",
+            children: [
+              {
+                specId: "P1001",
+                propName: "季节主题灯箱",
+                propType: "美陈道具",
+                propTypeName: "美陈道具",
+                specDesc: "亚克力面板 600*900mm，内置高亮灯带",
+                isNonStandard: true,
+                price: 328,
+                unit: "个",
+                formNames: "旗舰形象、标准形象",
+                warehouseList: [
+                  { warehouseCode: "W-A01", warehouseName: "入口橱窗 A 面" },
+                  { warehouseCode: "W-C03", warehouseName: "收银台背柜" },
+                  { warehouseCode: "W-D11", warehouseName: "试衣间导视墙" }
+                ]
+              },
+              {
+                specId: "P1002",
+                propName: "橱窗磁吸画面",
+                propType: "美陈道具",
+                propTypeName: "美陈道具",
+                specDesc: "磁吸软膜画面，可按门店尺寸裁切",
+                isNonStandard: true,
+                price: 86,
+                unit: "平米",
+                formNames: "旗舰形象",
+                warehouseList: [
+                  { warehouseCode: "W-A01", warehouseName: "入口橱窗 A 面" },
+                  { warehouseCode: "W-A02", warehouseName: "入口橱窗 B 面" }
+                ]
+              }
+            ]
+          },
+          {
+            propType: "graphic",
+            propTypeDesc: "平面道具",
+            children: [
+              {
+                specId: "P2001",
+                propName: "吊旗画面",
+                propType: "平面道具",
+                propTypeName: "平面道具",
+                specDesc: "双面写真覆膜，含吊挂配件",
+                price: 39,
+                unit: "平米",
+                formNames: "旗舰形象、标准形象",
+                warehouseList: [
+                  { warehouseCode: "W-B08", warehouseName: "主通道端架" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        formName: "标准形象",
+        groups: [
+          {
+            propType: "display",
+            propTypeDesc: "陈列道具",
+            children: [
+              {
+                specId: "P3001",
+                propName: "金属台卡",
+                propType: "陈列道具",
+                propTypeName: "陈列道具",
+                specDesc: "拉丝金属底座，适配 A5 画面",
+                price: 58,
+                unit: "个",
+                formNames: "标准形象、社区形象",
+                warehouseList: [
+                  { warehouseCode: "W-C03", warehouseName: "收银台背柜" },
+                  { warehouseCode: "W-E01", warehouseName: "中岛展示台" }
+                ]
+              },
+              {
+                specId: "P3002",
+                propName: "层板陈列架",
+                propType: "陈列道具",
+                propTypeName: "陈列道具",
+                specDesc: "透明亚克力三层陈列架",
+                price: 126,
+                unit: "套",
+                formNames: "标准形象",
+                warehouseList: [
+                  { warehouseCode: "W-B08", warehouseName: "主通道端架" },
+                  { warehouseCode: "W-E01", warehouseName: "中岛展示台" }
+                ]
+              }
+            ]
+          },
+          {
+            propType: "engineering",
+            propTypeDesc: "工程道具",
+            children: [
+              {
+                specId: "P4001",
+                propName: "导视灯箱电源",
+                propType: "工程道具",
+                propTypeName: "工程道具",
+                specDesc: "12V 电源组件，含固定配件",
+                price: 148,
+                unit: "个",
+                formNames: "标准形象",
+                warehouseList: [
+                  { warehouseCode: "W-D11", warehouseName: "试衣间导视墙" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        formName: "社区形象",
+        groups: [
+          {
+            propType: "graphic",
+            propTypeDesc: "平面道具",
+            children: [
+              {
+                specId: "P5001",
+                propName: "社区门店促销海报",
+                propType: "平面道具",
+                propTypeName: "平面道具",
+                specDesc: "写真覆膜，适配社区店海报框",
+                price: 24,
+                unit: "平米",
+                formNames: "社区形象",
+                warehouseList: [
+                  { warehouseCode: "W-F01", warehouseName: "入口促销位" },
+                  { warehouseCode: "W-F02", warehouseName: "收银提示位" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const state = {
+      purchaseFilter: "",
+      expandedGroups: ["旗舰形象"],
+      currentImage: "旗舰形象",
+      currentType: "美陈道具",
+      purchaseMode: "standard",
+      keywordInput: "",
+      searchKeyword: "",
+      customKeyword: "",
+      currentProp: null,
+      drawerOpen: false,
+      batchQuantity: 0,
+      purchaseQuantities: {},
+      tempQuantities: {},
+      purchaseSpecDescs: {},
+      tempSpecDescs: {},
+      customProps: [
+        {
+          storeIds: ["S001", "S002"],
+          storeNames: ["重庆观音桥旗舰店", "成都春熙路标准店"],
+          propName: "门头节庆定制贴",
+          propType: "平面道具",
+          specDesc: "按门店门头尺寸定制",
+          imageName: "门头节庆定制贴.jpg",
+          price: 168,
+          unit: "个",
+          qty: 2,
+          supplierName: "山城广告制作"
+        }
+      ],
+      activeCustomAdd: null
+    };
+
+    const els = {
+      mainContent: document.getElementById("mainContent"),
+      selectedStoreCount: document.getElementById("selectedStoreCount"),
+      storeTags: document.getElementById("storeTags"),
+      modeTabs: document.getElementById("modeTabs"),
+      purchaseFilter: null,
+      categoryTree: null,
+      currentPath: null,
+      keywordInput: null,
+      searchBtn: null,
+      propsContent: null,
+      purchasedPropCount: null,
+      nextBtn: null,
+      drawerMask: document.getElementById("drawerMask"),
+      customModal: document.getElementById("customModal"),
+      toast: document.getElementById("toast"),
+      draftSaveBtn: document.getElementById("draftSaveBtn"),
+      reselectBtn: document.getElementById("reselectBtn")
+    };
+
+    const DRAFT_STORAGE_KEY = "MAIN_POS_PROP_PURCHASE_DRAFTS";
+
+    function propIcon(type) {
+      const map = {
+        "美陈道具": ["#f56c6c", "#fef0f0"],
+        "陈列道具": ["#67c23a", "#f0f9eb"],
+        "工程道具": ["#909399", "#f4f4f5"],
+        "平面道具": ["#e6a23c", "#fdf6ec"]
+      };
+      const [stroke, fill] = map[type] || ["#527DF7", "#eef3ff"];
+      return `<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="10" width="28" height="28" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="2"/><path d="M17 19h14M17 25h14M17 31h9" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/></svg>`;
+    }
+
+    function positionIcon() {
+      return `<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="10" width="34" height="28" rx="2" fill="#eef3ff" stroke="#527DF7" stroke-width="2"/><path d="M12 33l8-10 6 7 4-5 6 8" fill="none" stroke="#527DF7" stroke-width="2"/><circle cx="31" cy="18" r="3" fill="#527DF7"/></svg>`;
+    }
+
+    function formatMoney(value) {
+      return `¥${Number(value || 0).toFixed(2)}`;
+    }
+
+    function formatUnitPrice(prop) {
+      return `${formatMoney(prop.price)}/每${prop.unit || "个"}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function typeInfo(type) {
+      return storeTypes[type] || storeTypes.JM;
+    }
+
+    function getQuantityKey(prop) {
+      return `${state.currentImage}_${prop.specId}`;
+    }
+
+    function getAllTypeNodes() {
+      return propGroups.flatMap(group => group.groups.map(typeGroup => ({
+        id: `${group.formName}_${typeGroup.propType}`,
+        formName: group.formName,
+        propType: typeGroup.propType,
+        propName: typeGroup.propTypeDesc,
+        specList: typeGroup.children || []
+      })));
+    }
+
+    function isTypePurchased(typeNode) {
+      return typeNode.specList.some(prop => getPropPurchaseCount(prop, typeNode.formName) > 0);
+    }
+
+    function getFilteredGroups() {
+      return propGroups.map(group => {
+        const props = group.groups.map(typeGroup => ({
+          id: `${group.formName}_${typeGroup.propType}`,
+          formName: group.formName,
+          propType: typeGroup.propType,
+          propName: typeGroup.propTypeDesc,
+          specList: typeGroup.children || []
+        })).filter(typeNode => {
+          if (state.purchaseFilter === "purchased") return isTypePurchased(typeNode);
+          if (state.purchaseFilter === "unpurchased") return !isTypePurchased(typeNode);
+          return true;
+        });
+        return { image: group.formName, props };
+      }).filter(group => group.props.length > 0);
+    }
+
+    function currentTypeNode() {
+      return getAllTypeNodes().find(node => node.formName === state.currentImage && node.propName === state.currentType) || null;
+    }
+
+    function filteredProps() {
+      const node = currentTypeNode();
+      if (!node) return [];
+      const keyword = state.searchKeyword.trim().toLowerCase();
+      return (node.specList || []).filter(prop => {
+        const purchased = getPropPurchaseCount(prop) > 0;
+        if (state.purchaseFilter === "purchased" && !purchased) return false;
+        if (state.purchaseFilter === "unpurchased" && purchased) return false;
+        if (!keyword) return true;
+        const inName = (prop.propName || "").toLowerCase().includes(keyword);
+        const inWarehouse = (prop.warehouseList || []).some(warehouse => (warehouse.warehouseName || "").toLowerCase().includes(keyword));
+        return inName || inWarehouse;
+      });
+    }
+
+    function applicableStores() {
+      return stores.filter(store => store.storeForm === state.currentImage);
+    }
+
+    function getPropPurchaseCount(prop, formName = state.currentImage) {
+      const key = `${formName}_${prop.specId}`;
+      const quantities = state.purchaseQuantities[key] || {};
+      const currentStoreIds = new Set(stores.map(store => store.id));
+      return Object.entries(quantities).filter(([storeId, qty]) => Number(qty) > 0 && currentStoreIds.has(storeId)).length;
+    }
+
+    function getPropPurchaseTotalQuantity(prop, formName = state.currentImage) {
+      const key = `${formName}_${prop.specId}`;
+      const quantities = state.purchaseQuantities[key] || {};
+      const currentStoreIds = new Set(stores.map(store => store.id));
+      return Object.entries(quantities).reduce((total, [storeId, qty]) => {
+        if (!currentStoreIds.has(storeId)) return total;
+        return total + Number(qty || 0);
+      }, 0);
+    }
+
+    function purchasedPropCount() {
+      const currentStoreIds = new Set(stores.map(store => store.id));
+      return Object.values(state.purchaseQuantities).filter(quantities => (
+        Object.entries(quantities).some(([storeId, qty]) => Number(qty) > 0 && currentStoreIds.has(storeId))
+      )).length;
+    }
+
+    function purchasedStoreCount() {
+      if (!state.currentProp) return 0;
+      const quantities = state.tempQuantities[getQuantityKey(state.currentProp)] || {};
+      return Object.values(quantities).filter(qty => Number(qty) > 0).length;
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove("show"), 2400);
+    }
+
+    function readDrafts() {
+      try {
+        return JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || "[]");
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeDrafts(drafts) {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+    }
+
+    function draftSnapshot() {
+      return {
+        purchaseFilter: state.purchaseFilter,
+        expandedGroups: [...state.expandedGroups],
+        currentImage: state.currentImage,
+        currentType: state.currentType,
+        purchaseMode: state.purchaseMode,
+        keywordInput: state.keywordInput,
+        searchKeyword: state.searchKeyword,
+        customKeyword: state.customKeyword,
+        batchQuantity: state.batchQuantity,
+        purchaseQuantities: state.purchaseQuantities,
+        tempQuantities: state.tempQuantities,
+        purchaseSpecDescs: state.purchaseSpecDescs,
+        tempSpecDescs: state.tempSpecDescs,
+        customProps: state.customProps
+      };
+    }
+
+    function saveDraft() {
+      const count = state.purchaseMode === "custom" ? state.customProps.length : purchasedPropCount();
+      const mode = state.purchaseMode === "custom" ? "定制道具" : "标准道具";
+      const drafts = readDrafts();
+      drafts.unshift({
+        id: `prop_${Date.now()}`,
+        title: `道具采购草稿-${mode}-${count}项`,
+        stage: "采购入口",
+        count,
+        updatedAt: new Date().toLocaleString("zh-CN", { hour12: false }),
+        snapshot: draftSnapshot()
+      });
+      writeDrafts(drafts.slice(0, 10));
+      showToast("已暂存，可在原始订单列表的暂存记录中继续编辑");
+    }
+
+    function restoreDraft(id) {
+      const draft = readDrafts().find(item => item.id === id);
+      if (!draft) return showToast("草稿不存在");
+      Object.assign(state, draft.snapshot || {});
+      state.currentProp = null;
+      state.drawerOpen = false;
+      state.activeCustomAdd = null;
+      closeCustomModal();
+      render();
+      showToast("已恢复暂存草稿");
+    }
+
+    function deleteDraft(id) {
+      writeDrafts(readDrafts().filter(item => item.id !== id));
+      renderDraftList();
+      showToast("草稿已删除");
+    }
+
+    function renderDraftList() {
+      const drafts = readDrafts();
+      els.customModal.classList.add("open");
+      els.customModal.innerHTML = `<div class="purchase-modal">
+        <div class="modal-header">
+          <span>暂存记录</span>
+          <button class="modal-close" data-modal-close type="button">×</button>
+        </div>
+        <div class="modal-body">
+          ${drafts.length ? `<table class="custom-table">
+            <thead><tr><th>草稿名称</th><th style="width:120px;">阶段</th><th style="width:160px;">更新时间</th><th style="width:140px;">操作</th></tr></thead>
+            <tbody>${drafts.map(draft => `<tr>
+              <td>${escapeHtml(draft.title)}</td>
+              <td>${escapeHtml(draft.stage)}</td>
+              <td>${escapeHtml(draft.updatedAt)}</td>
+              <td><button class="btn btn-link" data-restore-draft="${draft.id}" type="button">继续编辑</button><button class="btn btn-link danger-link" data-delete-draft="${draft.id}" type="button">删除</button></td>
+            </tr>`).join("")}</tbody>
+          </table>` : `<div class="empty-data-tip">暂无暂存记录</div>`}
+        </div>
+      </div>`;
+    }
+
+    function resizeSpecTextarea(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+
+    function resizeSpecTextareas() {
+      els.drawerMask.querySelectorAll(".spec-textarea").forEach(resizeSpecTextarea);
+    }
+
+    function closeCustomModal() {
+      state.activeCustomAdd = null;
+      els.customModal.classList.remove("open");
+      els.customModal.innerHTML = "";
+    }
+
+    function openCustomModal(index = null) {
+      const editingProp = Number.isInteger(index) ? state.customProps[index] : null;
+      state.activeCustomAdd = {
+        index,
+        storeIds: editingProp?.storeIds ? [...editingProp.storeIds] : [],
+        storePanelOpen: false
+      };
+      renderCustomModal();
+    }
+
+    function renderCustomModal() {
+      if (!state.activeCustomAdd) {
+        closeCustomModal();
+        return;
+      }
+      const editingProp = Number.isInteger(state.activeCustomAdd.index)
+        ? state.customProps[state.activeCustomAdd.index]
+        : null;
+      const selectedStoreIds = state.activeCustomAdd.storeIds || [];
+      const storeLabel = selectedStoreIds.length
+        ? stores.filter(store => selectedStoreIds.includes(store.id)).map(store => store.storeName).join("、")
+        : "请选择采购门店";
+      els.customModal.classList.add("open");
+      els.customModal.innerHTML = `<div class="purchase-modal">
+        <div class="modal-header">
+          <span>${editingProp ? "编辑定制道具" : "采购定制道具"}</span>
+          <button class="modal-close" data-modal-close type="button">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="non-standard-form">
+            <div class="form-item full">
+              <label>采购门店</label>
+              <div class="store-multi-select" data-store-multi-select>
+                <button class="multi-select-trigger ${state.activeCustomAdd.storePanelOpen ? "open" : ""}" data-store-select-trigger type="button">
+                  <span class="multi-select-label" data-store-select-label>${escapeHtml(storeLabel)}</span>
+                  <span class="multi-select-arrow">⌄</span>
+                </button>
+                <div class="multi-select-panel ${state.activeCustomAdd.storePanelOpen ? "open" : ""}" data-store-select-panel>
+                  ${stores.map(store => `<label class="multi-select-option">
+                    <input type="checkbox" data-custom-store value="${store.id}" ${selectedStoreIds.includes(store.id) ? "checked" : ""}>
+                    ${escapeHtml(store.storeName)}
+                  </label>`).join("")}
+                </div>
+              </div>
+            </div>
+            <div class="form-item">
+              <label>道具名称</label>
+              <input data-custom-field="propName" placeholder="请输入道具名称" value="${escapeHtml(editingProp?.propName || "")}" />
+            </div>
+            <div class="form-item">
+              <label>道具类型</label>
+              <select data-custom-field="propType">
+                ${propTypeOptions.map(type => `<option value="${type}" ${type === editingProp?.propType ? "selected" : ""}>${type}</option>`).join("")}
+              </select>
+            </div>
+            <div class="form-item full">
+              <label>规格说明</label>
+              <input data-custom-field="specDesc" placeholder="请输入规格说明" value="${escapeHtml(editingProp?.specDesc || "")}" />
+            </div>
+            <div class="form-item">
+              <label>图片</label>
+              <div class="upload-box" data-upload-trigger>
+                <div class="upload-preview" id="customImagePreview">${editingProp?.imageName ? propIcon(editingProp.propType) : "+"}</div>
+                <div class="upload-text">
+                  <span id="customImageName">${escapeHtml(editingProp?.imageName || "上传图片")}</span>
+                  <span class="upload-tip">支持本地选择，示例页仅展示预览</span>
+                </div>
+              </div>
+              <input class="hidden-file-input" data-custom-field="imageName" type="file" accept="image/*" />
+            </div>
+            <div class="form-item">
+              <label>供应商</label>
+              <select data-custom-field="supplierName">
+                ${supplierOptions.map(supplier => `<option value="${supplier}" ${supplier === editingProp?.supplierName ? "selected" : ""}>${supplier}</option>`).join("")}
+              </select>
+            </div>
+            <div class="form-item">
+              <label>每单位价格（元）</label>
+              <div class="unit-price-field">
+                <input data-custom-field="price" type="number" min="0" step="0.01" placeholder="0.00" value="${editingProp?.price ?? ""}" />
+                <span class="unit-prefix">/每</span>
+                <select data-custom-field="unit">
+                  <option value="" ${editingProp?.unit ? "" : "selected"}>请选择单位</option>
+                  ${["平米", "米", "个", "对"].map(unit => `<option value="${unit}" ${unit === editingProp?.unit ? "selected" : ""}>${unit}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div class="form-item">
+              <label>数量</label>
+              <div class="quantity-field">
+                <input data-custom-field="qty" type="number" min="0" step="1" value="${editingProp?.qty ?? 1}" />
+                <span class="quantity-suffix" data-custom-qty-unit>${escapeHtml(editingProp?.unit || "")}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-modal-close type="button">取消</button>
+          <button class="btn btn-primary" data-save-custom type="button">保存</button>
+        </div>
+      </div>`;
+    }
+
+    function saveCustomProp() {
+      if (!state.activeCustomAdd) return;
+      const read = field => els.customModal.querySelector(`[data-custom-field="${field}"]`)?.value?.trim() || "";
+      const storeIds = state.activeCustomAdd.storeIds || [];
+      if (storeIds.length === 0) {
+        showToast("请选择采购门店");
+        return;
+      }
+      const propName = read("propName");
+      if (!propName) {
+        showToast("请填写道具名称");
+        return;
+      }
+      const isEdit = Number.isInteger(state.activeCustomAdd.index);
+      const prop = {
+        storeIds,
+        storeNames: stores.filter(store => storeIds.includes(store.id)).map(store => store.storeName),
+        propName,
+        propType: read("propType"),
+        specDesc: read("specDesc"),
+        imageName: els.customModal.querySelector('[data-custom-field="imageName"]')?.files?.[0]?.name || (isEdit ? state.customProps[state.activeCustomAdd.index]?.imageName : "") || "",
+        price: Number(read("price") || 0),
+        unit: read("unit"),
+        qty: Number(read("qty") || 1),
+        supplierName: read("supplierName")
+      };
+      if (isEdit) state.customProps[state.activeCustomAdd.index] = prop;
+      else state.customProps.push(prop);
+      closeCustomModal();
+      render();
+      showToast(isEdit ? "定制道具已更新" : "定制道具已添加");
+    }
+
+    function renderStores() {
+      els.selectedStoreCount.textContent = stores.length;
+      els.storeTags.innerHTML = stores.map(store => {
+        const type = typeInfo(store.storeType);
+        return `<div class="tag-item"><span class="tag ${type.className}">${type.label}</span><span class="tag-store-name">${store.storeName}</span></div>`;
+      }).join("");
+    }
+
+    function renderTabs() {
+      els.modeTabs.innerHTML = modeTabs.map(tab => (
+        `<button class="mode-tab ${tab.value === state.purchaseMode ? "active" : ""}" data-mode="${tab.value}" type="button">${tab.label}</button>`
+      )).join("");
+    }
+
+    function standardContentHtml() {
+      return `<aside class="left-section">
+        <div class="filter-section">
+          <select class="select" id="purchaseFilter">
+            <option value="" ${state.purchaseFilter === "" ? "selected" : ""}>是否已采购</option>
+            <option value="purchased" ${state.purchaseFilter === "purchased" ? "selected" : ""}>已采购</option>
+            <option value="unpurchased" ${state.purchaseFilter === "unpurchased" ? "selected" : ""}>未采购</option>
+          </select>
+        </div>
+        <div class="category-list-scroll" id="categoryTree"></div>
+      </aside>
+
+      <main class="right-section">
+        <div class="header-bar">
+          <div class="props-header" id="currentPath">当前目录：- / 全部</div>
+          <div class="search-box">
+            <input class="input" id="keywordInput" placeholder="输入道具/仓位名称" value="${escapeHtml(state.keywordInput)}" />
+            <button class="btn" id="searchBtn" title="搜索" type="button">🔍</button>
+          </div>
+        </div>
+        <div class="props-scroll">
+          <div class="props-scroll-inner" id="propsContent"></div>
+        </div>
+        <div class="detail-footer">
+          <span>已采购 <span class="purchased-prop-count" id="purchasedPropCount">0</span> 个道具</span>
+          <div class="footer-actions">
+            <button class="btn" id="draftSaveBtn" type="button">暂存</button>
+            <button class="btn btn-primary" id="nextBtn" type="button" disabled>去下单</button>
+          </div>
+        </div>
+      </main>`;
+    }
+
+    function renderCustomPropsSection() {
+      const keyword = state.customKeyword.trim();
+      const customRows = state.customProps
+        .map((prop, index) => ({ prop, index }))
+        .filter(({ prop }) => !keyword || (prop.propName || "").includes(keyword));
+      const listHtml = !state.customProps.length
+        ? `<div class="empty-data-tip">暂无定制道具</div>`
+        : !customRows.length
+          ? `<div class="empty-data-tip">未找到匹配的定制道具</div>`
+          : `<div class="prop-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 180px;">采购门店</th>
+              <th>道具名称</th>
+              <th style="width: 120px;">道具类型</th>
+              <th>规格说明</th>
+              <th style="width: 72px;">图片</th>
+              <th style="width: 140px;">每单位价格（元）</th>
+              <th style="width: 80px;">数量</th>
+              <th>供应商</th>
+              <th style="width: 100px;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${customRows.map(({ prop, index }) => {
+              const storeNames = (prop.storeNames || []).join("、") || "-";
+              const propName = prop.propName || "-";
+              const propType = prop.propType || "-";
+              const specDesc = prop.specDesc || "-";
+              const price = formatUnitPrice(prop);
+              const qty = `${prop.qty || 0}${prop.unit || "个"}`;
+              const supplierName = prop.supplierName || "-";
+              return `<tr>
+              <td class="text-ellipsis" title="${escapeHtml(storeNames)}">${escapeHtml(storeNames)}</td>
+              <td><div class="prop-name-cell"><span class="text-ellipsis" title="${escapeHtml(propName)}">${escapeHtml(propName)}</span></div></td>
+              <td title="${escapeHtml(propType)}">${escapeHtml(propType)}</td>
+              <td class="text-ellipsis" title="${escapeHtml(specDesc)}">${escapeHtml(specDesc)}</td>
+              <td><div class="custom-image-cell">${propIcon(prop.propType)}</div></td>
+              <td title="${escapeHtml(price)}">${price}</td>
+              <td title="${escapeHtml(qty)}">${qty}</td>
+              <td class="text-ellipsis" title="${escapeHtml(supplierName)}">${escapeHtml(supplierName)}</td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn btn-link" data-edit-custom="${index}" type="button">编辑</button>
+                  <button class="btn btn-link danger-link" data-delete-custom="${index}" type="button">删除</button>
+                </div>
+              </td>
+            </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+      return listHtml;
+    }
+
+    function customFilterHtml() {
+      return `<div class="custom-list-filter">
+        <label for="customKeywordInput">道具名称</label>
+        <input class="input" id="customKeywordInput" data-custom-keyword placeholder="请输入道具名称" value="${escapeHtml(state.customKeyword)}" />
+      </div>`;
+    }
+
+    function customContentHtml() {
+      return `<section class="custom-section">
+        <div class="custom-header">
+          <div class="custom-header-left">
+            <span>定制道具</span>
+            ${customFilterHtml()}
+          </div>
+          <div class="custom-header-actions">
+            <button class="btn btn-primary btn-small" data-add-custom type="button">采购定制道具</button>
+          </div>
+        </div>
+        <section class="global-custom-props">${renderCustomPropsSection()}</section>
+        <div class="detail-footer">
+          <div class="footer-actions">
+            <button class="btn" id="draftSaveBtn" type="button">暂存</button>
+            <button class="btn btn-primary" id="nextBtn" type="button" ${purchasedPropCount() === 0 && state.customProps.length === 0 ? "disabled" : ""}>去下单</button>
+          </div>
+        </div>
+      </section>`;
+    }
+
+    function bindMainEls() {
+      els.purchaseFilter = document.getElementById("purchaseFilter");
+      els.categoryTree = document.getElementById("categoryTree");
+      els.currentPath = document.getElementById("currentPath");
+      els.keywordInput = document.getElementById("keywordInput");
+      els.searchBtn = document.getElementById("searchBtn");
+      els.propsContent = document.getElementById("propsContent");
+      els.purchasedPropCount = document.getElementById("purchasedPropCount");
+      els.nextBtn = document.getElementById("nextBtn");
+    }
+
+    function renderMainContent() {
+      els.mainContent.innerHTML = state.purchaseMode === "standard" ? standardContentHtml() : customContentHtml();
+      bindMainEls();
+      if (state.purchaseMode === "standard") {
+        renderCategoryTree();
+        renderCards();
+        renderFooter();
+      }
+    }
+
+    function renderCategoryTree() {
+      const groups = getFilteredGroups();
+      if (!groups.length) {
+        els.categoryTree.innerHTML = `<div class="empty-data-tip">暂无道具类型</div>`;
+        return;
+      }
+      els.categoryTree.innerHTML = groups.map(group => {
+        const expanded = state.expandedGroups.includes(group.image);
+        return `<section class="image-group">
+          <div class="group-title" data-toggle-image="${group.image}">
+            <span class="group-icon ${expanded ? "expanded" : ""}">›</span>
+            <span>${group.image}</span>
+          </div>
+          ${expanded ? `<div class="category-list">
+            ${group.props.map(prop => `<div class="category-item ${state.currentImage === prop.formName && state.currentType === prop.propName ? "active" : ""}" data-select-type="${prop.formName}|${prop.propName}">
+              <span class="cat-name">${prop.propName}</span>
+              <span class="cat-count">${prop.specList.length}</span>
+            </div>`).join("")}
+          </div>` : ""}
+        </section>`;
+      }).join("");
+    }
+
+    function renderCards() {
+      const props = filteredProps();
+      els.currentPath.textContent = `当前目录：${state.currentImage || "-"} / ${state.currentType || "全部"}`;
+      if (!props.length) {
+        els.propsContent.innerHTML = `<div class="empty-data-tip">${state.searchKeyword ? "未找到匹配的道具" : "暂无道具数据"}</div>`;
+        return;
+      }
+      els.propsContent.innerHTML = `<div class="props-grid">
+        ${props.map(prop => {
+          const count = getPropPurchaseTotalQuantity(prop);
+          const formNames = (prop.formNames || "").split("、").filter(Boolean);
+          const warehouses = prop.warehouseList || [];
+          return `<article class="prop-card">
+            <div class="prop-main">
+              <div class="prop-image">
+                <div class="prop-image-wrap">
+                  <div class="prop-image-box">${propIcon(prop.propTypeName || prop.propType)}</div>
+                  ${prop.isNonStandard ? `<div class="non-standard-badge">非标</div>` : ""}
+                </div>
+              </div>
+              <div class="prop-info">
+                <div class="prop-header">
+                  <span class="prop-name" title="${prop.propName}">${prop.propName}</span>
+                  <span class="purchase-btn-wrap">
+                    <button class="btn btn-primary btn-small" data-purchase-prop="${prop.specId}" type="button">采购</button>
+                    <span class="purchase-count ${count > 0 ? "show" : ""}">${count}</span>
+                  </span>
+                </div>
+                <div class="prop-image-version">
+                  ${formNames.slice(0, 2).map(name => `<span class="pill">${name}</span>`).join("")}
+                  ${formNames.length > 2 ? `<span class="pill">...</span>` : ""}
+                </div>
+                <div class="prop-spec">规格说明：${prop.specDesc || "-"}</div>
+                <div class="prop-positions">
+                  <span class="image-tag">适用陈列仓位</span>
+                  ${warehouses.slice(0, 2).map(item => `<span class="pill pill-info">${item.warehouseName}</span>`).join("")}
+                  ${warehouses.length > 2 ? `<span class="pill pill-info">...</span>` : ""}
+                </div>
+                <div class="prop-price">${formatUnitPrice(prop)}</div>
+              </div>
+            </div>
+          </article>`;
+        }).join("")}
+      </div>`;
+    }
+
+    function renderFooter() {
+      const count = purchasedPropCount();
+      els.purchasedPropCount.textContent = count;
+      els.nextBtn.disabled = count === 0;
+    }
+
+    function renderDrawer() {
+      if (!state.drawerOpen || !state.currentProp) {
+        els.drawerMask.classList.remove("open");
+        els.drawerMask.innerHTML = "";
+        return;
+      }
+      const prop = state.currentProp;
+      const key = getQuantityKey(prop);
+      const quantities = state.tempQuantities[key] || {};
+      const specDescriptions = state.tempSpecDescs[key] || {};
+      const storesForProp = applicableStores();
+      const unit = prop.unit || "个";
+      els.drawerMask.classList.add("open");
+      els.drawerMask.innerHTML = `<aside class="purchase-drawer">
+        <div class="drawer-header">
+          <span>${prop.propName}</span>
+          <button class="drawer-close" data-close-drawer type="button">×</button>
+        </div>
+        <div class="drawer-body">
+          <section class="section">
+            <span class="section-title">道具适用仓位</span>
+            <div class="positions-grid">
+              ${(prop.warehouseList || []).map(warehouse => `<div class="position-card">
+                <div class="position-image">${positionIcon()}</div>
+                <div class="position-name">${warehouse.warehouseName}</div>
+              </div>`).join("")}
+            </div>
+          </section>
+          <section class="section store-list-section">
+            <div class="section-header">
+              <span class="section-title">门店列表</span>
+              <div class="batch-set-inline">
+                <span class="quantity-input-wrap">
+                  <input class="number-input" id="batchQuantityInput" type="number" min="0" max="999" step="1" value="${state.batchQuantity}">
+                  <span class="quantity-unit">${escapeHtml(unit)}</span>
+                </span>
+                <button class="btn btn-primary btn-small" data-batch-confirm type="button">批量设置数量</button>
+              </div>
+            </div>
+            <div class="store-tip">ⓘ 当前道具属于 ${state.currentImage}，系统已自动筛选符合该形象的门店。</div>
+            <div class="store-list-header">
+              <div class="store-info">门店信息</div>
+              <div class="store-config-fields">
+                ${prop.isNonStandard ? `<span class="store-spec-column"><span class="required-star">*</span>规格说明</span>` : ""}
+                <span class="store-qty-column">采购数量</span>
+              </div>
+            </div>
+            <div class="store-list">
+              ${storesForProp.length ? storesForProp.map(store => `<div class="store-item">
+                <div class="store-info">
+                  <div class="store-name-row">
+                    <span class="store-name">${store.storeName}</span>
+                    <span class="image-tag-small">${store.storeForm}</span>
+                  </div>
+                  <span class="store-meta">${store.deptName || "-"} | ${typeInfo(store.storeType).label}</span>
+                </div>
+                <div class="store-config-fields">
+                  ${prop.isNonStandard ? `<textarea class="spec-textarea" data-store-spec="${store.id}" placeholder="规格说明">${escapeHtml(specDescriptions[store.id] ?? prop.specDesc ?? "")}</textarea>` : ""}
+                  <span class="quantity-input-wrap">
+                    <input class="number-input" data-store-qty="${store.id}" type="number" min="0" max="999" step="1" value="${quantities[store.id] || 0}">
+                    <span class="quantity-unit">${escapeHtml(unit)}</span>
+                  </span>
+                </div>
+              </div>`).join("") : `<div class="empty-data-tip">当前形象下暂无可采购门店</div>`}
+            </div>
+          </section>
+        </div>
+        <div class="drawer-footer">
+          <span class="purchase-summary">为 <span class="count" id="drawerStoreCount">${purchasedStoreCount()}</span> 家门店采购</span>
+          <button class="btn btn-primary" data-confirm-purchase type="button">确认</button>
+        </div>
+      </aside>`;
+      resizeSpecTextareas();
+    }
+
+    function render() {
+      renderStores();
+      renderTabs();
+      renderMainContent();
+      renderDrawer();
+    }
+
+    function selectFirstAvailableType() {
+      const groups = getFilteredGroups();
+      const firstGroup = groups.find(group => group.props.length);
+      if (!firstGroup) {
+        state.currentImage = "";
+        state.currentType = "";
+        return;
+      }
+      state.currentImage = firstGroup.image;
+      state.currentType = firstGroup.props[0].propName;
+      if (!state.expandedGroups.includes(firstGroup.image)) state.expandedGroups.push(firstGroup.image);
+    }
+
+    function openPurchaseDrawer(propId) {
+      const prop = filteredProps().find(item => String(item.specId) === String(propId));
+      if (!prop) return;
+      state.currentProp = prop;
+      state.batchQuantity = 0;
+      const key = getQuantityKey(prop);
+      state.tempQuantities[key] = { ...(state.purchaseQuantities[key] || {}) };
+      state.tempSpecDescs[key] = { ...(state.purchaseSpecDescs[key] || {}) };
+      applicableStores().forEach(store => {
+        if (state.tempQuantities[key][store.id] === undefined) state.tempQuantities[key][store.id] = 0;
+        if (state.tempSpecDescs[key][store.id] === undefined) state.tempSpecDescs[key][store.id] = prop.specDesc || "";
+      });
+      state.drawerOpen = true;
+      renderDrawer();
+    }
+
+    els.modeTabs.addEventListener("click", event => {
+      const tab = event.target.closest("[data-mode]");
+      if (!tab) return;
+      state.purchaseMode = tab.dataset.mode;
+      render();
+    });
+
+    els.mainContent.addEventListener("change", event => {
+      if (event.target.closest("#purchaseFilter")) {
+        state.purchaseFilter = event.target.value;
+        const visible = getFilteredGroups().some(group => group.props.some(prop => prop.formName === state.currentImage && prop.propName === state.currentType));
+        if (!visible) selectFirstAvailableType();
+        render();
+      }
+    });
+
+    els.mainContent.addEventListener("click", event => {
+      if (event.target.closest("#draftSaveBtn")) {
+        saveDraft();
+        return;
+      }
+
+      const toggle = event.target.closest("[data-toggle-image]");
+      if (toggle) {
+        const image = toggle.dataset.toggleImage;
+        if (state.expandedGroups.includes(image)) state.expandedGroups = state.expandedGroups.filter(item => item !== image);
+        else state.expandedGroups.push(image);
+        renderCategoryTree();
+        return;
+      }
+      const type = event.target.closest("[data-select-type]");
+      if (type) {
+        const [image, propName] = type.dataset.selectType.split("|");
+        state.currentImage = image;
+        state.currentType = propName;
+        state.searchKeyword = "";
+        state.keywordInput = "";
+        els.keywordInput.value = "";
+        render();
+      }
+      const btn = event.target.closest("[data-purchase-prop]");
+      if (btn) {
+        openPurchaseDrawer(btn.dataset.purchaseProp);
+        return;
+      }
+      if (event.target.closest("#searchBtn")) {
+        state.searchKeyword = state.keywordInput;
+        renderCards();
+        return;
+      }
+      if (event.target.closest("[data-add-custom]")) {
+        openCustomModal();
+        return;
+      }
+      const editBtn = event.target.closest("[data-edit-custom]");
+      if (editBtn) {
+        openCustomModal(Number(editBtn.dataset.editCustom));
+        return;
+      }
+      const deleteBtn = event.target.closest("[data-delete-custom]");
+      if (deleteBtn) {
+        state.customProps.splice(Number(deleteBtn.dataset.deleteCustom), 1);
+        render();
+        showToast("定制道具已删除");
+        return;
+      }
+      if (event.target.closest("#nextBtn")) {
+        if (state.purchaseMode === "standard" && purchasedPropCount() === 0) return;
+        if (state.purchaseMode === "custom" && purchasedPropCount() === 0 && state.customProps.length === 0) return;
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: "prototype-route", action: "propCreateOrder" }, "*");
+          return;
+        }
+        window.parent.postMessage({ type: "prototype-route", action: "propCreateOrder" }, "*");
+      }
+    });
+
+    els.mainContent.addEventListener("input", event => {
+      if (event.target.closest("#keywordInput")) {
+        state.keywordInput = event.target.value;
+        return;
+      }
+      const customKeywordInput = event.target.closest("[data-custom-keyword]");
+      if (customKeywordInput) {
+        state.customKeyword = customKeywordInput.value;
+        render();
+      }
+    });
+
+    els.mainContent.addEventListener("keydown", event => {
+      if (event.target.closest("#keywordInput") && event.key === "Enter") {
+        state.searchKeyword = state.keywordInput;
+        renderCards();
+      }
+    });
+
+    els.customModal.addEventListener("click", event => {
+      if (event.target === els.customModal || event.target.closest("[data-modal-close]")) {
+        closeCustomModal();
+        return;
+      }
+
+      if (event.target.closest("[data-store-select-trigger]") && state.activeCustomAdd) {
+        state.activeCustomAdd.storePanelOpen = !state.activeCustomAdd.storePanelOpen;
+        els.customModal.querySelector("[data-store-select-panel]")?.classList.toggle("open", state.activeCustomAdd.storePanelOpen);
+        els.customModal.querySelector("[data-store-select-trigger]")?.classList.toggle("open", state.activeCustomAdd.storePanelOpen);
+        return;
+      }
+
+      if (!event.target.closest("[data-store-multi-select]") && state.activeCustomAdd?.storePanelOpen) {
+        state.activeCustomAdd.storePanelOpen = false;
+        els.customModal.querySelector("[data-store-select-panel]")?.classList.remove("open");
+        els.customModal.querySelector("[data-store-select-trigger]")?.classList.remove("open");
+      }
+
+      if (event.target.closest("[data-save-custom]")) {
+        saveCustomProp();
+        return;
+      }
+
+      const restoreDraftBtn = event.target.closest("[data-restore-draft]");
+      if (restoreDraftBtn) {
+        restoreDraft(restoreDraftBtn.dataset.restoreDraft);
+        return;
+      }
+
+      const deleteDraftBtn = event.target.closest("[data-delete-draft]");
+      if (deleteDraftBtn) {
+        deleteDraft(deleteDraftBtn.dataset.deleteDraft);
+        return;
+      }
+
+      if (event.target.closest("[data-upload-trigger]") && state.activeCustomAdd) {
+        els.customModal.querySelector('[data-custom-field="imageName"]')?.click();
+      }
+    });
+
+    els.customModal.addEventListener("change", event => {
+      const storeInput = event.target.closest("[data-custom-store]");
+      if (storeInput && state.activeCustomAdd) {
+        const selected = new Set(state.activeCustomAdd.storeIds || []);
+        if (storeInput.checked) selected.add(storeInput.value);
+        else selected.delete(storeInput.value);
+        state.activeCustomAdd.storeIds = [...selected];
+        const label = els.customModal.querySelector("[data-store-select-label]");
+        if (label) {
+          label.textContent = state.activeCustomAdd.storeIds.length
+            ? stores.filter(store => state.activeCustomAdd.storeIds.includes(store.id)).map(store => store.storeName).join("、")
+            : "请选择采购门店";
+        }
+        return;
+      }
+
+      const unitSelect = event.target.closest('[data-custom-field="unit"]');
+      if (unitSelect) {
+        const suffix = els.customModal.querySelector("[data-custom-qty-unit]");
+        if (suffix) suffix.textContent = unitSelect.value || "";
+        return;
+      }
+
+      const imageInput = event.target.closest('[data-custom-field="imageName"]');
+      if (imageInput && state.activeCustomAdd) {
+        const file = imageInput.files?.[0];
+        if (!file) return;
+        const nameEl = els.customModal.querySelector("#customImageName");
+        const previewEl = els.customModal.querySelector("#customImagePreview");
+        if (nameEl) nameEl.textContent = file.name;
+        if (previewEl) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            previewEl.innerHTML = `<img src="${reader.result}" alt="">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
+    els.drawerMask.addEventListener("click", event => {
+      if (event.target === els.drawerMask || event.target.closest("[data-close-drawer]")) {
+        state.drawerOpen = false;
+        renderDrawer();
+        return;
+      }
+      if (event.target.closest("[data-batch-confirm]") && state.currentProp) {
+        const key = getQuantityKey(state.currentProp);
+        const value = Number(document.getElementById("batchQuantityInput")?.value || 0);
+        state.batchQuantity = value;
+        if (!state.tempQuantities[key]) state.tempQuantities[key] = {};
+        applicableStores().forEach(store => {
+          state.tempQuantities[key][store.id] = value;
+        });
+        renderDrawer();
+        return;
+      }
+      if (event.target.closest("[data-confirm-purchase]") && state.currentProp) {
+        const key = getQuantityKey(state.currentProp);
+        state.purchaseQuantities[key] = { ...(state.tempQuantities[key] || {}) };
+        state.purchaseSpecDescs[key] = { ...(state.tempSpecDescs[key] || {}) };
+        state.drawerOpen = false;
+        render();
+        showToast("采购配置已保存");
+      }
+    });
+
+    els.drawerMask.addEventListener("input", event => {
+      const qtyInput = event.target.closest("[data-store-qty]");
+      if (qtyInput && state.currentProp) {
+        const key = getQuantityKey(state.currentProp);
+        if (!state.tempQuantities[key]) state.tempQuantities[key] = {};
+        state.tempQuantities[key][qtyInput.dataset.storeQty] = Number(qtyInput.value || 0);
+        const countEl = document.getElementById("drawerStoreCount");
+        if (countEl) countEl.textContent = purchasedStoreCount();
+      }
+      const specInput = event.target.closest("[data-store-spec]");
+      if (specInput && state.currentProp) {
+        const key = getQuantityKey(state.currentProp);
+        if (!state.tempSpecDescs[key]) state.tempSpecDescs[key] = {};
+        state.tempSpecDescs[key][specInput.dataset.storeSpec] = specInput.value;
+        resizeSpecTextarea(specInput);
+      }
+    });
+
+    els.reselectBtn.addEventListener("click", () => {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "prototype-route", action: "propSelectStores" }, "*");
+        return;
+      }
+      window.parent.postMessage({ type: "prototype-route", action: "propSelectStores" }, "*");
+    });
+
+    const initialDraftId = new URLSearchParams(window.location.search).get("draftId");
+    if (initialDraftId) restoreDraft(initialDraftId);
+    else render();
+  </script>
+</body>
+</html>

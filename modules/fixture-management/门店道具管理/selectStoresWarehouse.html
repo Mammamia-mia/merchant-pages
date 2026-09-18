@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>按仓位采购-选择门店</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --primary: #527DF7;
+      --primary-soft: #eef3ff;
+      --primary-line: #c9d6ff;
+      --surface: #fff;
+      --bg: #f2f4f7;
+      --line: #e4e7ed;
+      --line-strong: #d8dee9;
+      --text: #334155;
+      --text-strong: #172033;
+      --muted: #7b8798;
+      --danger: #f56c6c;
+      --success: #16a672;
+      --warning: #f6811f;
+      --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+      --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+    }
+    button, input, select, textarea { font: inherit; }
+    .page {
+      height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      gap: 12px;
+    }
+    .page-header,
+    .panel,
+    .bottom-bar,
+    .modal {
+      background: var(--surface);
+      border: 1px solid rgba(216, 226, 238, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-header {
+      flex: none;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .title-wrap { min-width: 0; }
+    h1 {
+      margin: 0 0 4px;
+      color: var(--text-strong);
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .transfer-container {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+      gap: 12px;
+      overflow: hidden;
+    }
+    .panel {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      flex: none;
+      min-height: 54px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-strong);
+      font-weight: 700;
+    }
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .filters {
+      flex: none;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .search-row {
+      flex: none;
+      padding: 0 14px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: 0.16s ease;
+    }
+    .input,
+    .select {
+      height: 34px;
+      padding: 0 10px;
+    }
+    .textarea {
+      min-height: 150px;
+      padding: 10px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(82, 125, 247, 0.12);
+    }
+    .table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+    td, th {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf0f5;
+      vertical-align: middle;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: #606266;
+      background: #f7f9fc;
+      text-align: left;
+      font-weight: 700;
+    }
+    tbody tr:hover { background: #fbfcff; }
+    tbody tr.selected { background: #f5f8ff; }
+    .checkbox-cell { width: 44px; text-align: center; }
+    .store-cell {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .store-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--text-strong);
+      font-weight: 700;
+    }
+    .store-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .store-code {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 7px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tag-form { color: #4264cc; background: var(--primary-soft); }
+    .tag-direct { color: #d4380d; background: #fff2e8; }
+    .tag-join { color: var(--success); background: #ecfdf5; }
+    .tag-franchise { color: #7a4d00; background: #fff7e6; }
+    .selected-tag {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .btn {
+      min-height: 32px;
+      padding: 6px 14px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      color: #606266;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.16s ease;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+    .btn-primary {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-primary:hover {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+      opacity: 0.92;
+    }
+    .btn-danger {
+      color: var(--danger);
+      border-color: #ffd8d8;
+      background: #fff;
+    }
+    .btn-link {
+      min-height: auto;
+      padding: 0;
+      border: 0;
+      color: var(--primary);
+      background: transparent;
+    }
+    .btn-small {
+      min-height: 28px;
+      padding: 4px 10px;
+      font-size: 13px;
+    }
+    .center-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .circle-btn {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .pagination {
+      flex: none;
+      min-height: 48px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .page-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .page-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: #606266;
+    }
+    .page-btn.active {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .bottom-bar {
+      flex: none;
+      min-height: 58px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 30px;
+    }
+    .count {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .empty-tip {
+      padding: 46px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.38);
+      backdrop-filter: blur(4px);
+    }
+    .modal-mask.open { display: flex; }
+    .modal {
+      width: min(600px, 100%);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    .modal-header,
+    .modal-footer {
+      min-height: 54px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .modal-title {
+      color: var(--text-strong);
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .modal-body {
+      padding: 20px 24px 16px;
+    }
+    .modal-footer {
+      justify-content: flex-end;
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+    }
+    .template-tip {
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--primary-line);
+      border-radius: 6px;
+      color: #4264cc;
+      background: var(--primary-soft);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .upload-drop-zone {
+      min-height: 220px;
+      border: 1px dashed #d8dee9;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: #606266;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+    .upload-drop-zone:hover,
+    .upload-drop-zone.dragging {
+      border-color: var(--primary);
+      background: #f8fbff;
+    }
+    .upload-icon {
+      width: 78px;
+      height: 58px;
+      color: #a8abb3;
+    }
+    .upload-copy {
+      font-size: 16px;
+      color: #606266;
+    }
+    .upload-link,
+    .template-link {
+      border: 0;
+      padding: 0;
+      min-height: auto;
+      color: var(--primary);
+      background: transparent;
+      cursor: pointer;
+    }
+    .upload-format-tip {
+      margin-top: 12px;
+      color: #606266;
+      text-align: center;
+      font-size: 14px;
+    }
+    .upload-file-name {
+      min-height: 22px;
+      margin-top: 8px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+    .import-result {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .toast {
+      position: fixed;
+      top: 22px;
+      left: 50%;
+      z-index: 40;
+      min-width: 220px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: #fff;
+      background: rgba(23, 32, 51, 0.92);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%);
+      transition: 0.16s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 4px);
+    }
+    @media (max-width: 980px) {
+      .transfer-container {
+        grid-template-columns: 1fr;
+        overflow: auto;
+      }
+      .panel { min-height: 360px; }
+      .center-panel { flex-direction: row; }
+      .filters { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div class="title-wrap">
+        <h1>请先选择采购门店</h1>
+        <div class="subtitle">按仓位采购 / 选择本次采购覆盖门店</div>
+      </div>
+    </header>
+
+    <main class="transfer-container">
+      <section class="panel">
+        <div class="panel-header">
+          <label class="panel-title"><input id="leftCheckAll" type="checkbox" /> 待选门店范围（<span id="leftTotal">0</span>家）</label>
+        </div>
+        <div class="filters">
+          <select class="select" id="deptFilter">
+            <option value="">全部区域</option>
+            <option value="西南区">西南区</option>
+            <option value="华中区">华中区</option>
+            <option value="华南区">华南区</option>
+          </select>
+          <select class="select" id="formFilter">
+            <option value="">全部形象</option>
+            <option value="flagship">旗舰形象</option>
+            <option value="standard">标准形象</option>
+            <option value="community">社区形象</option>
+          </select>
+          <select class="select" id="typeFilter">
+            <option value="">全部门店类型</option>
+            <option value="DIRECT">直营</option>
+            <option value="JOINT">联营</option>
+            <option value="FRANCHISE">加盟</option>
+          </select>
+        </div>
+        <div class="search-row">
+          <input class="input" id="searchInput" placeholder="请输入门店编号或名称快速搜索" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <tbody id="leftBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="leftPageText">显示 0-0 家，共 0 家</span>
+          <div class="page-actions">
+            <button class="page-btn" id="leftPrev" type="button">&lt;</button>
+            <button class="page-btn active" type="button">1</button>
+            <button class="page-btn" id="leftNext" type="button">&gt;</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="center-panel">
+        <button class="btn btn-primary circle-btn" id="addBtn" type="button" title="添加至已选">&gt;</button>
+        <button class="btn btn-primary circle-btn" id="removeBtn" type="button" title="从已选移除">&lt;</button>
+      </div>
+
+      <section class="panel">
+        <div class="panel-header">
+          <label class="panel-title"><input id="rightCheckAll" type="checkbox" /> 已选门店列表（<span id="rightTotal">0</span>家）</label>
+          <div class="panel-actions">
+            <button class="btn btn-small" id="importBtn" type="button">导入门店</button>
+            <button class="btn btn-danger btn-small" id="clearBtn" type="button">清 空</button>
+          </div>
+        </div>
+        <div class="search-row" style="padding-top:12px;">
+          <input class="input" id="rightSearchInput" placeholder="搜索已选门店编号或名称" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <tbody id="rightBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="rightPageText">显示 0-0 家，共 0 家</span>
+          <div class="page-actions">
+            <button class="page-btn" id="rightPrev" type="button">&lt;</button>
+            <button class="page-btn active" type="button">1</button>
+            <button class="page-btn" id="rightNext" type="button">&gt;</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom-bar">
+      <span>当前已圈选 <span class="count" id="selectedCount">0</span> 家门店作为本次采购对象</span>
+      <button class="btn btn-primary" id="nextBtn" type="button">选择采购仓位</button>
+    </footer>
+  </div>
+
+  <div class="modal-mask" id="modalMask"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORE_FORM_LABELS = { flagship: "旗舰形象", standard: "标准形象", community: "社区形象" };
+    const STORE_TYPE_LABELS = { DIRECT: "直营", JOINT: "联营", FRANCHISE: "加盟" };
+    const STORE_TYPE_CLASS = { DIRECT: "tag-direct", JOINT: "tag-join", FRANCHISE: "tag-franchise" };
+    const stores = [
+      { id: "S001", storeCode: "CQ001", storeName: "重庆观音桥旗舰店", dept: "西南区", storeForm: "flagship", storeType: "DIRECT", address: "重庆市江北区观音桥商圈 1 号" },
+      { id: "S002", storeCode: "CD002", storeName: "成都春熙路标准店", dept: "西南区", storeForm: "standard", storeType: "JOINT", address: "成都市锦江区春熙路 88 号" },
+      { id: "S003", storeCode: "WH003", storeName: "武汉光谷社区店", dept: "华中区", storeForm: "community", storeType: "FRANCHISE", address: "武汉市洪山区光谷步行街" },
+      { id: "S004", storeCode: "CS004", storeName: "长沙五一广场标准店", dept: "华中区", storeForm: "standard", storeType: "DIRECT", address: "长沙市芙蓉区五一广场" },
+      { id: "S005", storeCode: "GZ005", storeName: "广州天河城旗舰店", dept: "华南区", storeForm: "flagship", storeType: "DIRECT", address: "广州市天河区天河路 208 号" },
+      { id: "S006", storeCode: "SZ006", storeName: "深圳南山标准店", dept: "华南区", storeForm: "standard", storeType: "JOINT", address: "深圳市南山区科技园" },
+      { id: "S007", storeCode: "CQ007", storeName: "重庆解放碑社区店", dept: "西南区", storeForm: "community", storeType: "FRANCHISE", address: "重庆市渝中区解放碑" },
+      { id: "S008", storeCode: "WH008", storeName: "武汉楚河汉街旗舰店", dept: "华中区", storeForm: "flagship", storeType: "DIRECT", address: "武汉市武昌区楚河汉街" }
+    ];
+
+    const state = {
+      leftPage: 1,
+      leftPageSize: 10,
+      rightPage: 1,
+      rightPageSize: 10,
+      leftSelectedIds: new Set(),
+      rightSelectedIds: new Set(),
+      selectedIds: new Set(),
+      importCodes: []
+    };
+
+    const els = {
+      deptFilter: document.getElementById("deptFilter"),
+      formFilter: document.getElementById("formFilter"),
+      typeFilter: document.getElementById("typeFilter"),
+      searchInput: document.getElementById("searchInput"),
+      rightSearchInput: document.getElementById("rightSearchInput"),
+      leftBody: document.getElementById("leftBody"),
+      rightBody: document.getElementById("rightBody"),
+      leftTotal: document.getElementById("leftTotal"),
+      rightTotal: document.getElementById("rightTotal"),
+      selectedCount: document.getElementById("selectedCount"),
+      leftPageText: document.getElementById("leftPageText"),
+      rightPageText: document.getElementById("rightPageText"),
+      leftCheckAll: document.getElementById("leftCheckAll"),
+      rightCheckAll: document.getElementById("rightCheckAll"),
+      addBtn: document.getElementById("addBtn"),
+      removeBtn: document.getElementById("removeBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      importBtn: document.getElementById("importBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      modalMask: document.getElementById("modalMask"),
+      toast: document.getElementById("toast")
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2000);
+    }
+
+    function filteredLeftStores() {
+      const keyword = els.searchInput.value.trim().toLowerCase();
+      return stores.filter(store => {
+        return (!els.deptFilter.value || store.dept === els.deptFilter.value)
+          && (!els.formFilter.value || store.storeForm === els.formFilter.value)
+          && (!els.typeFilter.value || store.storeType === els.typeFilter.value)
+          && (!keyword || store.storeName.toLowerCase().includes(keyword) || store.storeCode.toLowerCase().includes(keyword));
+      });
+    }
+
+    function selectedStores() {
+      return stores.filter(store => state.selectedIds.has(store.id));
+    }
+
+    function filteredRightStores() {
+      const keyword = els.rightSearchInput.value.trim().toLowerCase();
+      return selectedStores().filter(store => !keyword || store.storeName.toLowerCase().includes(keyword) || store.storeCode.toLowerCase().includes(keyword));
+    }
+
+    function paginate(list, page, size) {
+      const maxPage = Math.max(1, Math.ceil(list.length / size));
+      const safePage = Math.min(page, maxPage);
+      return {
+        page: safePage,
+        maxPage,
+        rows: list.slice((safePage - 1) * size, safePage * size)
+      };
+    }
+
+    function storeRow(store, side) {
+      const selected = state.selectedIds.has(store.id);
+      const checked = side === "left" ? state.leftSelectedIds.has(store.id) : state.rightSelectedIds.has(store.id);
+      const disabled = side === "left" && selected;
+      return `<tr class="${selected ? "selected" : ""}">
+        <td class="checkbox-cell"><input data-${side}-check="${store.id}" type="checkbox" ${checked || disabled ? "checked" : ""} ${disabled ? "disabled" : ""} /></td>
+        <td>
+          <div class="store-cell" data-${side}-row="${store.id}">
+            <div class="store-title">
+              <span class="store-name">${escapeHtml(store.storeName)}</span>
+              <span class="tag tag-form">${STORE_FORM_LABELS[store.storeForm]}</span>
+              <span class="tag ${STORE_TYPE_CLASS[store.storeType]}">${STORE_TYPE_LABELS[store.storeType]}</span>
+            </div>
+            <div class="store-code">门店编码：${escapeHtml(store.storeCode)} · ${escapeHtml(store.dept)}</div>
+          </div>
+        </td>
+        <td style="width:${side === "left" ? "58" : "78"}px;text-align:center;">
+          ${side === "left" ? (selected ? `<span class="selected-tag">已选</span>` : "") : `<button class="btn btn-link" data-remove-single="${store.id}" type="button">移除</button>`}
+        </td>
+      </tr>`;
+    }
+
+    function renderLeft() {
+      const list = filteredLeftStores();
+      const page = paginate(list, state.leftPage, state.leftPageSize);
+      state.leftPage = page.page;
+      els.leftTotal.textContent = list.length;
+      els.leftBody.innerHTML = page.rows.length
+        ? page.rows.map(store => storeRow(store, "left")).join("")
+        : `<tr><td colspan="3"><div class="empty-tip">暂无符合条件的门店</div></td></tr>`;
+      const start = list.length ? (page.page - 1) * state.leftPageSize + 1 : 0;
+      const end = Math.min(page.page * state.leftPageSize, list.length);
+      els.leftPageText.textContent = `显示 ${start}-${end} 家，共 ${list.length} 家`;
+      const selectableRows = page.rows.filter(store => !state.selectedIds.has(store.id));
+      els.leftCheckAll.checked = selectableRows.length > 0 && selectableRows.every(store => state.leftSelectedIds.has(store.id));
+      els.leftCheckAll.indeterminate = selectableRows.some(store => state.leftSelectedIds.has(store.id)) && !els.leftCheckAll.checked;
+    }
+
+    function renderRight() {
+      const list = filteredRightStores();
+      const page = paginate(list, state.rightPage, state.rightPageSize);
+      state.rightPage = page.page;
+      els.rightTotal.textContent = state.selectedIds.size;
+      els.selectedCount.textContent = state.selectedIds.size;
+      els.nextBtn.disabled = state.selectedIds.size === 0;
+      els.clearBtn.disabled = state.selectedIds.size === 0;
+      els.removeBtn.disabled = state.rightSelectedIds.size === 0;
+      els.addBtn.disabled = state.leftSelectedIds.size === 0;
+      els.rightBody.innerHTML = page.rows.length
+        ? page.rows.map(store => storeRow(store, "right")).join("")
+        : `<tr><td colspan="3"><div class="empty-tip">左侧勾选门店后，点击中间的 &gt; 添加至此；也可以点击“导入门店”按门店编码导入。</div></td></tr>`;
+      const start = list.length ? (page.page - 1) * state.rightPageSize + 1 : 0;
+      const end = Math.min(page.page * state.rightPageSize, list.length);
+      els.rightPageText.textContent = `显示 ${start}-${end} 家，共 ${list.length} 家`;
+      els.rightCheckAll.checked = page.rows.length > 0 && page.rows.every(store => state.rightSelectedIds.has(store.id));
+      els.rightCheckAll.indeterminate = page.rows.some(store => state.rightSelectedIds.has(store.id)) && !els.rightCheckAll.checked;
+    }
+
+    function render() {
+      renderLeft();
+      renderRight();
+    }
+
+    function toggleLeft(id, checked) {
+      if (state.selectedIds.has(id)) return;
+      if (checked) state.leftSelectedIds.add(id);
+      else state.leftSelectedIds.delete(id);
+      render();
+    }
+
+    function toggleRight(id, checked) {
+      if (checked) state.rightSelectedIds.add(id);
+      else state.rightSelectedIds.delete(id);
+      render();
+    }
+
+    function addSelected() {
+      state.leftSelectedIds.forEach(id => state.selectedIds.add(id));
+      state.leftSelectedIds.clear();
+      state.rightPage = 1;
+      render();
+    }
+
+    function removeSelected() {
+      state.rightSelectedIds.forEach(id => state.selectedIds.delete(id));
+      state.rightSelectedIds.clear();
+      render();
+    }
+
+    function openImportModal() {
+      state.importCodes = [];
+      els.modalMask.innerHTML = `<div class="modal">
+        <div class="modal-header">
+          <span class="modal-title">导入门店</span>
+          <button class="btn btn-link" data-close-modal type="button" style="font-size:28px;color:#909399;">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="upload-drop-zone" data-upload-zone>
+            <svg class="upload-icon" viewBox="0 0 96 72" aria-hidden="true">
+              <path fill="currentColor" d="M74.8 31.7A24.2 24.2 0 0 0 27.2 25 20.2 20.2 0 0 0 31 65h16V44.8H34.5L48 29.4l13.5 15.4H49V65h25.2a16.7 16.7 0 0 0 .6-33.3Z"/>
+            </svg>
+            <div class="upload-copy">将文件拖到此处， 或<button class="upload-link" data-upload-trigger type="button">点击上传</button></div>
+            <input id="importFile" type="file" accept=".xlsx,.xls" hidden />
+          </div>
+          <div class="upload-format-tip">
+            仅允许导入xlsx、xls格式文件。
+            <button class="template-link" data-download-template type="button">下载模板</button>
+          </div>
+          <div class="upload-file-name" id="importFileName">模板字段包含：门店编码</div>
+          <div class="import-result" id="importResult"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-close-modal type="button">取消</button>
+          <button class="btn btn-primary" data-confirm-import type="button">确认导入</button>
+        </div>
+      </div>`;
+      els.modalMask.classList.add("open");
+    }
+
+    function downloadTemplate() {
+      const xls = `<table><tr><td>门店编码</td></tr><tr><td>CQ001</td></tr><tr><td>CD002</td></tr></table>`;
+      const blob = new Blob([xls], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "导入门店模板.xls";
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast("已生成导入模板");
+    }
+
+    function parseImportCodes(text) {
+      return [...new Set(String(text || "")
+        .split(/[\n,，\s]+/)
+        .map(item => item.trim())
+        .filter(Boolean)
+        .filter(item => item !== "门店编码"))];
+    }
+
+    function confirmImport() {
+      const codes = state.importCodes.length ? state.importCodes : [];
+      const result = document.getElementById("importResult");
+      if (!codes.length) {
+        result.textContent = "请先上传包含门店编码的文件。";
+        return;
+      }
+      const codeMap = new Map(stores.map(store => [store.storeCode.toUpperCase(), store]));
+      const matched = [];
+      const unmatched = [];
+      codes.forEach(code => {
+        const store = codeMap.get(code.toUpperCase());
+        if (store) matched.push(store);
+        else unmatched.push(code);
+      });
+      matched.forEach(store => state.selectedIds.add(store.id));
+      state.rightPage = 1;
+      render();
+      result.innerHTML = `成功导入 ${matched.length} 家门店${unmatched.length ? `，未匹配：${escapeHtml(unmatched.join("、"))}` : ""}`;
+      if (matched.length) showToast(`已导入 ${matched.length} 家门店`);
+    }
+
+    ["deptFilter", "formFilter", "typeFilter"].forEach(id => {
+      document.getElementById(id).addEventListener("change", () => {
+        state.leftPage = 1;
+        state.leftSelectedIds.clear();
+        render();
+      });
+    });
+    els.searchInput.addEventListener("input", () => {
+      state.leftPage = 1;
+      render();
+    });
+    els.rightSearchInput.addEventListener("input", () => {
+      state.rightPage = 1;
+      render();
+    });
+    els.leftCheckAll.addEventListener("change", event => {
+      const page = paginate(filteredLeftStores(), state.leftPage, state.leftPageSize);
+      page.rows.filter(store => !state.selectedIds.has(store.id)).forEach(store => {
+        if (event.target.checked) state.leftSelectedIds.add(store.id);
+        else state.leftSelectedIds.delete(store.id);
+      });
+      render();
+    });
+    els.rightCheckAll.addEventListener("change", event => {
+      const page = paginate(filteredRightStores(), state.rightPage, state.rightPageSize);
+      page.rows.forEach(store => {
+        if (event.target.checked) state.rightSelectedIds.add(store.id);
+        else state.rightSelectedIds.delete(store.id);
+      });
+      render();
+    });
+    els.leftBody.addEventListener("change", event => {
+      const input = event.target.closest("[data-left-check]");
+      if (input) toggleLeft(input.dataset.leftCheck, input.checked);
+    });
+    els.leftBody.addEventListener("click", event => {
+      const row = event.target.closest("[data-left-row]");
+      if (!row) return;
+      const id = row.dataset.leftRow;
+      toggleLeft(id, !state.leftSelectedIds.has(id));
+    });
+    els.rightBody.addEventListener("change", event => {
+      const input = event.target.closest("[data-right-check]");
+      if (input) toggleRight(input.dataset.rightCheck, input.checked);
+    });
+    els.rightBody.addEventListener("click", event => {
+      const remove = event.target.closest("[data-remove-single]");
+      if (remove) {
+        state.selectedIds.delete(remove.dataset.removeSingle);
+        state.rightSelectedIds.delete(remove.dataset.removeSingle);
+        render();
+        return;
+      }
+      const row = event.target.closest("[data-right-row]");
+      if (!row) return;
+      const id = row.dataset.rightRow;
+      toggleRight(id, !state.rightSelectedIds.has(id));
+    });
+    els.addBtn.addEventListener("click", addSelected);
+    els.removeBtn.addEventListener("click", removeSelected);
+    els.clearBtn.addEventListener("click", () => {
+      state.selectedIds.clear();
+      state.rightSelectedIds.clear();
+      render();
+    });
+    document.getElementById("leftPrev").addEventListener("click", () => {
+      state.leftPage = Math.max(1, state.leftPage - 1);
+      render();
+    });
+    document.getElementById("leftNext").addEventListener("click", () => {
+      state.leftPage += 1;
+      render();
+    });
+    document.getElementById("rightPrev").addEventListener("click", () => {
+      state.rightPage = Math.max(1, state.rightPage - 1);
+      render();
+    });
+    document.getElementById("rightNext").addEventListener("click", () => {
+      state.rightPage += 1;
+      render();
+    });
+    els.importBtn.addEventListener("click", openImportModal);
+    els.nextBtn.addEventListener("click", () => {
+      const selected = selectedStores();
+      if (!selected.length) return showToast("请至少选择一家门店");
+      sessionStorage.setItem("originalStoreOrders:warehouse:selectedStores", JSON.stringify(selected));
+      window.parent.postMessage({ type: "prototype-route", action: "warehousePurchase" }, "*");
+    });
+    els.modalMask.addEventListener("click", event => {
+      if (event.target === els.modalMask || event.target.closest("[data-close-modal]")) {
+        els.modalMask.classList.remove("open");
+        return;
+      }
+      if (event.target.closest("[data-upload-trigger]") || event.target.closest("[data-upload-zone]")) {
+        document.getElementById("importFile")?.click();
+        return;
+      }
+      if (event.target.closest("[data-download-template]")) {
+        downloadTemplate();
+        return;
+      }
+      if (event.target.closest("[data-confirm-import]")) {
+        confirmImport();
+      }
+    });
+    els.modalMask.addEventListener("change", event => {
+      if (event.target.id !== "importFile") return;
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const fileName = document.getElementById("importFileName");
+      const result = document.getElementById("importResult");
+      if (fileName) fileName.textContent = `已选择：${file.name}`;
+      if (result) result.textContent = "";
+      if (/\.(xlsx|xls)$/i.test(file.name)) {
+        state.importCodes = ["CQ001", "CD002"];
+        if (result) result.textContent = "静态原型已按模板示例读取门店编码：CQ001、CD002。";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.importCodes = parseImportCodes(reader.result || "");
+        if (result) result.textContent = state.importCodes.length ? `已读取 ${state.importCodes.length} 个门店编码。` : "未读取到门店编码。";
+      };
+      reader.readAsText(file, "utf-8");
+    });
+    els.modalMask.addEventListener("dragover", event => {
+      const zone = event.target.closest("[data-upload-zone]");
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.add("dragging");
+    });
+    els.modalMask.addEventListener("dragleave", event => {
+      const zone = event.target.closest("[data-upload-zone]");
+      if (zone) zone.classList.remove("dragging");
+    });
+    els.modalMask.addEventListener("drop", event => {
+      const zone = event.target.closest("[data-upload-zone]");
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.remove("dragging");
+      const input = document.getElementById("importFile");
+      if (!input || !event.dataTransfer.files.length) return;
+      input.files = event.dataTransfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    render();
+  </script>
+</body>
+</html>
